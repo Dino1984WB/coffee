@@ -63,7 +63,16 @@ while running:
     for explosion in explosions[:]:
         if explosion.update():
             explosions.remove(explosion)
-        explosion.draw(window, NEON_GREEN)
+            explosion.draw(window, NEON_GREEN)
+
+        # Check if any missiles are within the explosion's effective radius
+        for missile in missiles[:]:
+            distance = math.hypot(explosion.x - missile.x, explosion.y - missile.y)
+            if distance < explosion.effective_radius:
+                explosions.append(Explosion(missile.x, missile.y))
+                missiles.remove(missile)
+                missiles.append(Missile(random.randint(0, width), 0, random.randint(0, width), height))
+
 
     pygame.display.flip()
     pygame.time.delay(16)
