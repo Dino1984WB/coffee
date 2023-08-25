@@ -1,8 +1,12 @@
+
 # Dino
 
 import pygame
 import random
 import math
+from missile import Missile
+from turret import Turret
+from explosion import Explosion
 
 pygame.init()
 
@@ -15,60 +19,6 @@ pygame.display.set_caption("Missile Command")
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 NEON_GREEN = (57, 255, 20)
-
-# Define Explosion class
-class Explosion:
-    def __init__(self, x, y, max_radius=30):
-        self.x = x
-        self.y = y
-        self.radius = 0
-        self.max_radius = max_radius
-
-    def update(self):
-        self.radius += 2
-        if self.radius >= self.max_radius:
-            return True
-        return False
-
-    def draw(self, window):
-        pygame.draw.circle(window, NEON_GREEN, (int(self.x), int(self.y)), self.radius, 1)
-
-# Define Missile class
-class Missile:
-    def __init__(self, x, y, target_x, target_y):
-        self.x = x
-        self.y = y
-        self.target_x = target_x
-        self.target_y = target_y
-        self.speed = 2
-        self.radius = 5
-
-    def move(self):
-        direction_x = self.target_x - self.x
-        direction_y = self.target_y - self.y
-        distance = (direction_x ** 2 + direction_y ** 2) ** 0.5
-        if distance < 5:
-            return True
-        direction_x /= distance
-        direction_y /= distance
-        self.x += direction_x * self.speed
-        self.y += direction_y * self.speed
-        return False
-
-    def draw(self, window):
-        pygame.draw.circle(window, NEON_GREEN, (int(self.x), int(self.y)), self.radius)
-
-# Define Turret class
-class Turret:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def draw(self, window):
-        pygame.draw.circle(window, RED, (self.x, self.y), 10)
-
-    def shoot(self, target_x, target_y):
-        return Missile(self.x, self.y, target_x, target_y)
 
 # Initialize missiles and turrets
 missiles = [Missile(random.randint(0, width), 0, random.randint(0, width), height) for _ in range(3)]
@@ -93,33 +43,27 @@ while running:
     # Update missiles
     for missile in missiles[:]:
         if missile.move():
+            explosions.append(Explosion(missile.x, missile.y))
             missiles.remove(missile)
             missiles.append(Missile(random.randint(0, width), 0, random.randint(0, width), height))
-        missile.draw(window)
+        missile.draw(window, NEON_GREEN)
 
     # Update counter-missiles
-    for cm in counter_missiles[:]:
-        if cm.move():
-            counter_missiles.remove(cm)
-            continue
-        # Check collisions with missiles
-        for missile in missiles[:]:
-            if math.hypot(cm.x - missile.x, cm.y - missile.y) < cm.radius + missile.radius:
-                missiles.remove(missile)
-                counter_missiles.remove(cm)
-                explosions.append(Explosion(cm.x, cm.y))
-                break
-        cm.draw(window)
+    for missile in counter_missiles[:]:
+        if missile.move():
+            explosions.append(Explosion(missile.x, missile.y))
+            counter_missiles.remove(missile)
+        missile.draw(window, RED)
 
     # Draw turrets
     for turret in turrets:
-        turret.draw(window)
+        turret.draw(window, RED)
 
     # Update and draw explosions
     for explosion in explosions[:]:
         if explosion.update():
             explosions.remove(explosion)
-        explosion.draw(window)
+        explosion.draw(window, NEON_GREEN)
 
     pygame.display.flip()
     pygame.time.delay(16)
